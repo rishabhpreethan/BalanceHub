@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  passwordHash  String?
+  
+  accounts      Account[]
+  sessions      Session[]
+  groupMembers  GroupMember[]
+  expenseEvents ExpenseEvent[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Group {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  
+  members       GroupMember[]
+  expenseEvents ExpenseEvent[]
+}
+
+model GroupMember {
+  id      String @id @default(cuid())
+  groupId String
+  userId  String
+  role    Role   @default(MEMBER)
+  
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([groupId, userId])
+}
+
+model ExpenseEvent {
+  id              String          @id @default(cuid())
+  groupId         String
+  userId          String
+  amount          Decimal         @db.Decimal(12, 2)
+  merchant        String
+  description     String?
+  visibilityScope VisibilityScope @default(GROUP)
+  createdAt       DateTime        @default(now())
+  
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  OWNER
+  MEMBER
+}
+
+enum VisibilityScope {
+  PUBLIC
+  GROUP
+  SUBGROUP
+}
+
+// Views for aggregated data (to be created manually in database)
+// CREATE VIEW ledger_view AS
+// SELECT 
+//   group_id,
+//   user_id,
+//   SUM(amount) as total_spent,
+//   COUNT(*) as expense_count
+// FROM expense_events 
+// GROUP BY group_id, user_id;
+
+// CREATE VIEW user_expenses_view AS
+// SELECT 
+//   ee.*,
+//   u.name as user_name,
+//   g.name as group_name
+// FROM expense_events ee
+// JOIN users u ON ee.user_id = u.id
+// JOIN groups g ON ee.group_id = g.id;
