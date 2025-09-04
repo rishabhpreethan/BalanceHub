@@ -23,10 +23,17 @@ interface CreateGroupDialogProps {
 export function CreateGroupDialog({ open, onOpenChange, onGroupCreated }: CreateGroupDialogProps) {
   const [name, setName] = useState("")
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim()) return
+    setError(null)
+    setSuccess(null)
+    if (!name.trim()) {
+      setError("Please enter a group name")
+      return
+    }
 
     setLoading(true)
     try {
@@ -44,11 +51,17 @@ export function CreateGroupDialog({ open, onOpenChange, onGroupCreated }: Create
         const newGroup = await response.json()
         onGroupCreated(newGroup)
         setName("")
+        setSuccess("Group created")
+        setTimeout(() => {
+          setSuccess(null)
+          onOpenChange(false)
+        }, 600)
       } else {
-        console.error("Failed to create group")
+        const data = await response.json().catch(() => ({}))
+        setError(data?.error || "Failed to create group")
       }
     } catch (error) {
-      console.error("Error creating group:", error)
+      setError("Something went wrong. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -76,11 +89,14 @@ export function CreateGroupDialog({ open, onOpenChange, onGroupCreated }: Create
                 className="col-span-3"
                 placeholder="e.g., Roommates, Family Trip, Office Lunch"
                 required
+                disabled={loading}
               />
             </div>
           </div>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          {success && <p className="text-sm text-green-600">{success}</p>}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading || !name.trim()}>

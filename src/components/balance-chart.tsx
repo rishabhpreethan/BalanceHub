@@ -160,9 +160,12 @@ export function BalanceChart({ expenses, balances }: BalanceChartProps) {
                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
                 <Bar 
                   dataKey="balance" 
-                  fill={(entry) => entry >= 0 ? "#00C49F" : "#FF8042"}
                   name="Balance"
-                />
+                >
+                  {spendingData.map((entry, index) => (
+                    <Cell key={`balance-cell-${index}`} fill={entry.balance >= 0 ? "#00C49F" : "#FF8042"} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -56,7 +56,8 @@ interface LedgerData {
   memberCount: number
 }
 
-export default function GroupPage({ params }: { params: { groupId: string } }) {
+export default function GroupPage() {
+  const { groupId } = useParams<{ groupId: string }>()
   const router = useRouter()
   const [group, setGroup] = useState<GroupData | null>(null)
   const [ledger, setLedger] = useState<LedgerData | null>(null)
@@ -71,16 +72,16 @@ export default function GroupPage({ params }: { params: { groupId: string } }) {
   }, [router])
 
   useEffect(() => {
-    if (isAuthenticated()) {
+    if (isAuthenticated() && groupId) {
       fetchGroupData()
       fetchLedgerData()
     }
-  }, [params.groupId])
+  }, [groupId])
 
   const fetchGroupData = async () => {
     try {
       const token = getToken()
-      const response = await fetch(`/api/groups/${params.groupId}`, {
+      const response = await fetch(`/api/groups/${groupId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined
       })
       if (response.ok) {
@@ -97,7 +98,7 @@ export default function GroupPage({ params }: { params: { groupId: string } }) {
   const fetchLedgerData = async () => {
     try {
       const token = getToken()
-      const response = await fetch(`/api/ledger/${params.groupId}`, {
+      const response = await fetch(`/api/ledger/${groupId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined
       })
       if (response.ok) {
@@ -271,7 +272,7 @@ export default function GroupPage({ params }: { params: { groupId: string } }) {
         </TabsContent>
 
         <TabsContent value="split">
-          <FairSplitView groupId={params.groupId} />
+          <FairSplitView groupId={groupId} />
         </TabsContent>
 
         <TabsContent value="analytics">
@@ -316,14 +317,14 @@ export default function GroupPage({ params }: { params: { groupId: string } }) {
       <AddExpenseDialog
         open={addExpenseOpen}
         onOpenChange={setAddExpenseOpen}
-        groupId={params.groupId}
+        groupId={groupId}
         onExpenseAdded={handleExpenseAdded}
       />
 
       <AddMemberDialog
         open={addMemberOpen}
         onOpenChange={setAddMemberOpen}
-        groupId={params.groupId}
+        groupId={groupId}
         onMemberAdded={handleMemberAdded}
       />
     </div>

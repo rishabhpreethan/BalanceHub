@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/simple-auth'
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { groupId: string } }
+  request: Request,
+  context: any
 ) {
   try {
     const userId = await requireAuth(request)
 
-    const { groupId } = params
+    const { groupId } = context.params as { groupId: string }
 
     // Get group with members, verify user is a member
     const group = await prisma.group.findFirst({

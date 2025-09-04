@@ -20,6 +20,11 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "BalanceHub - Collaborative Expense Tracking",
   description: "Fair-split expense tracking for groups with real-time updates and CS fundamentals",
+  icons: {
+    icon: "/balancehublogo.png",
+    shortcut: "/balancehublogo.png",
+    apple: "/balancehublogo.png",
+  },
 };
 
 export default function RootLayout({

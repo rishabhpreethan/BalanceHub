@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { requireAuth } from '@/lib/simple-auth'
@@ -8,10 +8,10 @@ const addMemberSchema = z.object({
   role: z.enum(['OWNER', 'MEMBER']).optional().default('MEMBER')
 })
 
-export async function POST(request: NextRequest, { params }: { params: { groupId: string } }) {
+export async function POST(request: Request, context: any) {
   try {
     const requesterId = await requireAuth(request)
-    const { groupId } = params
+    const { groupId } = context.params as { groupId: string }
 
     // Ensure requester is an OWNER of the group
     const requesterMembership = await prisma.groupMember.findFirst({

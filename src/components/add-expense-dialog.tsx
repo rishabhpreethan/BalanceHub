@@ -29,6 +29,8 @@ export function AddExpenseDialog({ open, onOpenChange, groupId, onExpenseAdded }
   const [visibilityScope, setVisibilityScope] = useState("GROUP")
   const [merchantSuggestions, setMerchantSuggestions] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     if (merchant.length >= 2) {
@@ -40,6 +42,7 @@ export function AddExpenseDialog({ open, onOpenChange, groupId, onExpenseAdded }
 
   const fetchMerchantSuggestions = async (query: string) => {
     try {
+      if (loading) return
       const response = await fetch(`/api/merchant/autocomplete?q=${encodeURIComponent(query)}`)
       if (response.ok) {
         const suggestions = await response.json()
@@ -52,7 +55,12 @@ export function AddExpenseDialog({ open, onOpenChange, groupId, onExpenseAdded }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!amount || !merchant.trim()) return
+    setError(null)
+    setSuccess(null)
+    if (!amount || !merchant.trim()) {
+      setError("Please enter amount and merchant")
+      return
+    }
 
     setLoading(true)
     try {
@@ -78,11 +86,14 @@ export function AddExpenseDialog({ open, onOpenChange, groupId, onExpenseAdded }
         setMerchant("")
         setDescription("")
         setVisibilityScope("GROUP")
+        setSuccess("Expense added")
+        setTimeout(() => setSuccess(null), 600)
       } else {
-        console.error("Failed to create expense")
+        const data = await response.json().catch(() => ({}))
+        setError(data?.error || "Failed to create expense")
       }
     } catch (error) {
-      console.error("Error creating expense:", error)
+      setError("Something went wrong. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -113,6 +124,7 @@ export function AddExpenseDialog({ open, onOpenChange, groupId, onExpenseAdded }
                 className="col-span-3"
                 placeholder="0.00"
                 required
+                disabled={loading}
               />
             </div>
             
@@ -127,8 +139,9 @@ export function AddExpenseDialog({ open, onOpenChange, groupId, onExpenseAdded }
                   onChange={(e) => setMerchant(e.target.value)}
                   placeholder="e.g., Starbucks, Walmart, Uber"
                   required
+                  disabled={loading}
                 />
-                {merchantSuggestions.length > 0 && (
+                {merchantSuggestions.length > 0 && !loading && (
                   <div className="absolute top-full left-0 right-0 bg-background border rounded-md shadow-lg z-50 max-h-40 overflow-y-auto">
                     {merchantSuggestions.map((suggestion, index) => (
                       <button
@@ -158,6 +171,7 @@ export function AddExpenseDialog({ open, onOpenChange, groupId, onExpenseAdded }
                 onChange={(e) => setDescription(e.target.value)}
                 className="col-span-3"
                 placeholder="Optional description"
+                disabled={loading}
               />
             </div>
 
@@ -177,8 +191,10 @@ export function AddExpenseDialog({ open, onOpenChange, groupId, onExpenseAdded }
               </Select>
             </div>
           </div>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          {success && <p className="text-sm text-green-600">{success}</p>}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading || !amount || !merchant.trim()}>
