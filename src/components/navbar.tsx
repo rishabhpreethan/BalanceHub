@@ -2,12 +2,13 @@
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { DollarSign, LogOut, User } from "lucide-react"
+import { LogOut, User } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { clearToken, isAuthenticated } from "@/lib/client-auth"
 import { useRouter } from "next/navigation"
-import { ThemeToggle } from "@/components/theme-toggle"
+import Image from "next/image"
+import LogoImg from "../../balancehublogo2.png"
 
 export function Navbar() {
   const [authed, setAuthed] = useState(false)
@@ -22,12 +23,10 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
-            <DollarSign className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">BalanceHub</span>
+            <Image src={LogoImg} alt="BalanceHub" width={50} height={50} className="invert" />
           </Link>
 
-          <div className="flex items-center space-x-2">
-            <ThemeToggle />
+          <div className="flex items-center space-x-4">
             {authed ? (
               <div className="flex items-center space-x-4">
                 <Link href="/dashboard">
